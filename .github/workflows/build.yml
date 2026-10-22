@@ -1,0 +1,41 @@
+
+name: Build LockArt APK
+
+on:
+  push:
+    paths:
+      - 'LockArt.zip'
+      - '.github/workflows/build.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Extract project
+        run: |
+          unzip -q LockArt.zip
+          test -f lockart/settings.gradle.kts
+          test -f lockart/app/build.gradle.kts
+
+      - name: Build APK
+        working-directory: lockart
+        run: gradle :app:assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: LockArt-apk
+          path: lockart/app/build/outputs/apk/debug/app-debug.apk
+          
